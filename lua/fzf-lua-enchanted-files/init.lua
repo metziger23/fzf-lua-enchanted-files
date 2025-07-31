@@ -214,8 +214,6 @@ function M.files(opts)
       exclude_handle:close()
     end
 
-    -- Create a script that shows recent files first, then all others EXCEPT the recent ones
-    local temp_script = vim.fn.tempname() .. ".sh"
     local script_content = string.format([[#!/usr/bin/env bash
 # Show recent files first
 %s
@@ -226,21 +224,8 @@ function M.files(opts)
       original_cmd,
       vim.fn.shellescape(exclude_file))
 
-    local temp_file = io.open(temp_script, "w")
-    if temp_file then
-      temp_file:write(script_content)
-      temp_file:close()
-      vim.fn.system("chmod +x " .. temp_script)
-
-      -- Use the script
-      opts.cmd = temp_script
-
-      -- Clean up after a delay
-      vim.defer_fn(function()
-        vim.fn.delete(temp_script)
-        vim.fn.delete(exclude_file)
-      end, 5000)
-    end
+    opts.cmd = script_content
+    vim.defer_fn(function() vim.fn.delete(exclude_file) end, 5000)
   end
 
   -- Wrap actions to track history
